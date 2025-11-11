@@ -1,0 +1,237 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  password      String?
+  role          String    @default("PATIENT") // "ADMIN", "HOSPITAL_ADMIN", "DOCTOR", "PATIENT"
+  phone         String?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  patient         Patient?
+  doctor          Doctor?
+  hospital        Hospital?
+  appointments    Appointment[]    @relation("UserAppointments")
+  notifications   Notification[]
+  staff           Staff?
+}
+
+model Patient {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  medicalHistory  String?
+  allergies       String?
+  emergencyContact String?
+  preferredHospitalId String?
+  preferredHospital Hospital? @relation(fields: [preferredHospitalId], references: [id])
+  
+  appointments    Appointment[]
+  queueEntries    QueueEntry[]
+  feedback        Feedback[]
+}
+
+model Hospital {
+  id              String    @id @default(cuid())
+  name            String
+  address         String
+  city            String
+  state           String
+  zipCode         String
+  country         String
+  phone           String
+  email           String
+  website         String?
+  capacity        Int
+  currentLoad     Int       @default(0)
+  adminId         String?   @unique
+  admin           User?     @relation(fields: [adminId], references: [id])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  departments     Department[]
+  doctors         Doctor[]
+  appointments    Appointment[]
+  queueEntries    QueueEntry[]
+  patients        Patient[]
+  staff           Staff[]
+}
+
+model Department {
+  id              String    @id @default(cuid())
+  name            String
+  hospitalId      String
+  hospital        Hospital  @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  description     String?
+  
+  doctors         Doctor[]
+  appointments    Appointment[]
+}
+
+model Doctor {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialization  String
+  hospitalId      String
+  hospital        Hospital  @relation(fields: [hospitalId], references: [id])
+  departmentId    String
+  department      Department @relation(fields: [departmentId], references: [id])
+  experience      Int?
+  availability    Availability[]
+  
+  appointments    Appointment[]
+  queueEntries    QueueEntry[]
+
+  active          Boolean   @default(true)
+}
+
+model Availability {
+  id              String    @id @default(cuid())
+  doctorId        String
+  doctor          Doctor    @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  dayOfWeek       Int       // 0-6 for Sunday-Saturday
+  startTime       String    // HH:MM format
+  endTime         String    // HH:MM format
+  isAvailable     Boolean   @default(true)
+}
+
+model Appointment {
+  id              String    @id @default(cuid())
+  patientId       String
+  patient         Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId        String
+  doctor          Doctor    @relation(fields: [doctorId], references: [id])
+  hospitalId      String
+  hospital        Hospital  @relation(fields: [hospitalId], references: [id])
+  departmentId    String
+  department      Department @relation(fields: [departmentId], references: [id])
+  userId          String
+  user            User      @relation("UserAppointments", fields: [userId], references: [id])
+  appointmentDate DateTime  // Added this field
+  reasonForVisit  String?   // Added this field
+  startTime       DateTime  // Changed from String to DateTime
+  endTime         DateTime  // Changed from String to DateTime
+  status          String    @default("REQUESTED") // Updated default value
+  urgencyLevel    String    @default("NORMAL") // Changed from urgency to urgencyLevel
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  queueEntry      QueueEntry?
+  feedback        Feedback?
+}
+
+model QueueEntry {
+  id              String    @id @default(cuid())
+  patientId       String
+  patient         Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  hospitalId      String
+  hospital        Hospital  @relation(fields: [hospitalId], references: [id])
+  doctorId        String?
+  doctor          Doctor?   @relation(fields: [doctorId], references: [id])
+  appointmentId   String?   @unique
+  appointment     Appointment? @relation(fields: [appointmentId], references: [id])
+  queuePosition   Int?
+  estimatedWaitTime Int?    // In minutes
+  entryTime       DateTime  @default(now())
+  startTime       DateTime?
+  endTime         DateTime?
+  status          String    @default("WAITING") // "WAITING", "IN_PROGRESS", "COMPLETED", "CANCELLED"
+  priority        Int       @default(5) // 1-10, higher is more priority
+  symptoms        String?
+  urgency         String    @default("NORMAL") // "LOW", "NORMAL", "HIGH", "EMERGENCY"
+}
+
+model Notification {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title           String
+  message         String
+  isRead          Boolean   @default(false)
+  type            String    @default("INFO") // "INFO", "WARNING", "URGENT", "QUEUE_UPDATE"
+  createdAt       DateTime  @default(now())
+}
+
+model Feedback {
+  id              String    @id @default(cuid())
+  patientId       String
+  patient         Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointmentId   String    @unique
+  appointment     Appointment @relation(fields: [appointmentId], references: [id])
+  rating          Int       // 1-5
+  comment         String?
+  createdAt       DateTime  @default(now())
+}
+
+model AIModel {
+  id              String    @id @default(cuid())
+  name            String
+  version         String
+  description     String?
+  accuracy        Float
+  trainingData    String?
+  parameters      String?   // JSON string of parameters
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  predictions     AIPrediction[]
+}
+
+model AIPrediction {
+  id              String    @id @default(cuid())
+  modelId         String
+  model           AIModel   @relation(fields: [modelId], references: [id])
+  queueData       String    // JSON string of queue data
+  waitTimePrediction Int    // Predicted wait time in minutes
+  confidence      Float     // Confidence level 0-1
+  actualWaitTime  Int?      // Actual wait time for validation
+  error           Float?    // Prediction error
+  createdAt       DateTime  @default(now())
+}
+
+model Staff {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hospitalId  String
+  hospital    Hospital  @relation(fields: [hospitalId], references: [id])
+  role        String    // e.g., "RECEPTIONIST", "NURSE", etc.
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model EmergencyRequest {
+  id              String    @id @default(cuid())
+  patientName     String
+  patientPhone    String
+  patientLocation String
+  emergencyType   String    // "cardiac", "respiratory", "trauma", "stroke", "allergic", "other"
+  status          String    @default("PENDING") // "PENDING", "ACKNOWLEDGED", "DISPATCHED", "RESOLVED"
+  priorityLevel   String    @default("HIGH")    // "HIGH", "EMERGENCY"
+  description     String?
+  acknowledgedBy  String?   // Staff member who acknowledged
+  acknowledgedAt  DateTime?
+  resolvedAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// Note: PostgreSQL supports enums and complex data types for better data validation
+// UrgencyLevel values: "LOW", "NORMAL", "HIGH", "EMERGENCY"

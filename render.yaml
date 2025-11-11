@@ -1,0 +1,52 @@
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: mediqueue-db
+    env: docker
+    image: postgres:15
+    envVars:
+      - key: POSTGRES_DB
+        value: mediqueue
+      - key: POSTGRES_USER
+        value: mediqueue_user
+      - key: POSTGRES_PASSWORD
+        generateValue: true
+    disk:
+      name: mediqueue-db-disk
+      mountPath: /var/lib/postgresql/data
+      sizeGB: 10
+
+  # Web Application
+  - type: web
+    name: mediqueue
+    env: node
+    buildCommand: npm install && npx prisma generate && npx prisma db push && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXTAUTH_SECRET
+        generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NEXTAUTH_URL
+        fromService:
+          type: web
+          name: mediqueue
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: DATABASE_URL
+        fromService:
+          type: pserv
+          name: mediqueue-db
+          property: connectionString
+      - key: NEXT_TYPESCRIPT_IGNORE_BUILD_ERRORS
+        value: true
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: NEXT_PUBLIC_EMAILJS_SERVICE_ID
+        sync: false
+      - key: NEXT_PUBLIC_EMAILJS_TEMPLATE_ID
+        sync: false
+      - key: NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
+        sync: false

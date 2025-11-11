@@ -1,0 +1,62 @@
+{
+  "name": "mediqueue-ai",
+  "version": "0.1.1",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "npx prisma generate && npx prisma db push && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "setup:postgres": "node scripts/setup-postgres.js",
+    "prisma:generate": "prisma generate",
+    "prisma:studio": "prisma studio",
+    "prisma:seed": "ts-node prisma/seed.ts",
+    "prisma:deploy": "prisma migrate deploy",
+    "prisma:reset": "prisma migrate reset",
+    "prisma:push": "prisma db push",
+    "prisma:migrate": "prisma migrate dev",
+    "postinstall": "prisma generate",
+    "prepare": "prisma generate",
+    "test:db": "node prisma/db-connection-test.js",
+    "validate:postgres": "node scripts/validate-postgres.js"
+  },
+  "dependencies": {
+    "@emailjs/browser": "^4.4.1",
+    "@google/generative-ai": "^0.24.1",
+    "@headlessui/react": "^2.2.0",
+    "@prisma/client": "^5.9.1",
+    "@types/jsonwebtoken": "^9.0.9",
+    "bcryptjs": "^2.4.3",
+    "chart.js": "^4.4.8",
+    "framer-motion": "^12.6.2",
+    "jsonwebtoken": "^9.0.2",
+    "next": "^14.0.4",
+    "next-auth": "^4.24.5",
+    "pg": "^8.11.3",
+    "react": "^18.2.0",
+    "react-chatbot-kit": "^2.2.2",
+    "react-dom": "^18.2.0",
+    "react-icons": "^4.11.0",
+    "tailwindcss": "^3.4.17",
+    "postcss": "^8.5.3",
+    "autoprefixer": "^10.4.21",
+    "uuid": "^9.0.1",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.8.9",
+    "@types/pg": "^8.10.9",
+    "@types/react": "^18.2.33",
+    "@types/react-dom": "^18.2.14",
+    "@types/uuid": "^9.0.8",
+    "eslint": "^8.52.0",
+    "eslint-config-next": "^14.0.0",
+    "prisma": "^5.9.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.2.2"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  }
+}
