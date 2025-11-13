@@ -75,12 +75,12 @@ export default function RootLayout({
                 <p className="text-gray-400 text-sm">
                   © 2025 MediQueue. Built with ❤️ by{' '}
                   <a 
-                    href="https://www.linkedin.com/in/khushidutta/" 
+                    href="https://www.linkedin.com/in/krishanjha/" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-blue-400 hover:text-blue-300 transition-colors font-medium"
                   >
-                    Khushi Dutta
+                    Krishan Jha
                   </a>
                   .
                 </p>
